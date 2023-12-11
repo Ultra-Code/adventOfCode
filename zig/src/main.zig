@@ -1,19 +1,28 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var GPA = std.heap.GeneralPurposeAllocator(.{}){};
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const gpa = switch (builtin.mode) {
+        .Debug => blk: {
+            break :blk GPA.allocator();
+        },
+        else => blk: {
+            var arena = std.heap.ArenaAllocator.init(GPA.allocator());
+            break :blk arena.allocator();
+        },
+    };
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // don't forget to flush!
+    const cwd = std.fs.cwd();
+    const content = try cwd.readFileAlloc(gpa, "../data/day01.txt", std.math.maxInt(usize));
+    var lines = std.mem.splitScalar(u8, content, '\n');
+    while (lines.next()) |line| {
+        if (line.len > 0) {
+            const elve_calaries = try std.fmt.parseInt(usize, line, 10);
+        } else {}
+    }
+    std.debug.print("content\n{s}", .{content});
 }
 
 test "simple test" {
