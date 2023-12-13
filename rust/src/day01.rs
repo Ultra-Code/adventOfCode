@@ -7,18 +7,18 @@ pub fn day01() -> Result<(), Box<dyn std::error::Error>> {
 
     let elves_calories = content.split("\n\n");
 
-    'start: for elve_calories in elves_calories {
+    for elve_calories in elves_calories {
         let each_calory = elve_calories.split('\n');
         {
             let mut total_calory = 0;
             for calory in each_calory {
                 if let Ok(calory) = calory.parse::<usize>() {
                     total_calory += calory;
-                    list_of_elves_calories.push(total_calory);
                 } else {
-                    break 'start;
+                    break;
                 }
             }
+            list_of_elves_calories.push(total_calory);
         }
     }
 
