@@ -3,6 +3,7 @@
 mod day01;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    day01::day01()?;
+    day01::part1()?;
+    day01::part2()?;
     Ok(())
 }
