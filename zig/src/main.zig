@@ -1,7 +1,11 @@
 const std = @import("std");
-const day01 = @import("day01.zig");
+const day02 = @import("day02.zig");
 
 pub fn main() !void {
-    day01.part1();
-    day01.part2();
+    day02.part1();
+    day02.part2();
+}
+
+test {
+    _ = std.testing.refAllDeclsRecursive(@This());
 }

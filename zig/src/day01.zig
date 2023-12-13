@@ -37,12 +37,30 @@ pub fn part1() void {
     );
 }
 
+fn top3elves(list: []const usize) [3]usize {
+    var top3: [3]usize = .{ 0, 0, 0 };
+    for (list) |calories| {
+        if (calories > top3[0]) {
+            std.mem.swap(usize, &top3[1], &top3[2]);
+            std.mem.swap(usize, &top3[0], &top3[1]);
+            top3[0] = calories;
+        } else if (calories > top3[1]) {
+            std.mem.swap(usize, &top3[1], &top3[2]);
+            top3[1] = calories;
+        } else if (calories > top3[2]) {
+            top3[2] = calories;
+        }
+    }
+    return top3;
+}
+
 pub fn part2() void {
     const elves_calories = elveList().items;
-    std.mem.sortUnstable(usize, elves_calories, {}, std.sort.desc(usize));
+    // std.mem.sortUnstable(usize, elves_calories, {}, std.sort.desc(usize));
+    const top_3_elves = top3elves(elves_calories);
     const total_calories_of_top_3_elves = sum: {
         var total: usize = 0;
-        for (elves_calories[0..3]) |calories| {
+        for (top_3_elves[0..3]) |calories| {
             total += calories;
         }
         break :sum total;

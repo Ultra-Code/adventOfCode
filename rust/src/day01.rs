@@ -1,6 +1,6 @@
 use std::fs::read_to_string;
 fn elve_list() -> Result<Vec<usize>, Box<dyn std::error::Error>> {
-    let content = read_to_string("../data/day01.txt")?;
+    let content = read_to_string("src/data/day01.txt")?;
 
     let mut list_of_elves_calories: Vec<usize> = vec![];
 
