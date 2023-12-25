@@ -3,9 +3,9 @@
 #![feature(num_midpoint)]
 #![feature(iter_next_chunk)]
 #![feature(iter_array_chunks)]
-mod day04;
+mod day05;
 
 fn main() {
-    day04::part1();
-    day04::part2();
+    day05::part1();
+    day05::part1_take2();
 }
