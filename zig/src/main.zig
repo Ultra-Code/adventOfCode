@@ -1,11 +1,10 @@
 const std = @import("std");
-const day04 = @import("day04.zig");
+const day05 = @import("day05.zig");
 
 pub fn main() !void {
-    _ = day04.part1();
-    _ = day04.part2();
+    _ = day05.part1();
 }
 
 test {
-    _ = day04;
+    // _ = day04;
 }
