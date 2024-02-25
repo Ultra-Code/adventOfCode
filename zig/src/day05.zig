@@ -5,16 +5,20 @@ const StacksOfCrates = struct {
 
     const stack_offset = 4;
     const column_no = 9;
-    const column_len = 8 + 40; //the +40 is to account for the lenght during crates shuffle/movement
+    const column_len = 8;
+    const column_upper_bound = column_len + 40; //the +40 is to account for the lenght during crates shuffle/movement
     const moves_no = 501;
 
-    const Stack = std.BoundedArray(u8, column_len);
+    const Stack = std.BoundedArray(u8, column_upper_bound);
 
     /// struct { quantity: u9, from: u9, to: u9 };
-    const Moves = struct { u9, u9, u9 };
+    const Move = struct { u9, u9, u9 };
 
-    crates: [column_no]Stack,
-    moves: [moves_no]Moves,
+    const Moves = [moves_no]Move;
+    const Crates = [column_no]Stack;
+
+    crates: Crates,
+    moves: Moves,
 
     pub fn init() Self {
         const input = @embedFile("data/day05.txt");
@@ -37,14 +41,14 @@ const StacksOfCrates = struct {
             }
         }
 
-        var moves: [moves_no]Moves = undefined;
+        var moves: Moves = undefined;
 
         var instruction_index: usize = 0;
         while (lines.next()) |instructions| : (instruction_index += 1) {
             if (instructions.len == 0) break;
 
             var instruction = std.mem.tokenizeAny(u8, instructions, "move from to");
-            moves[instruction_index] = Moves{
+            moves[instruction_index] = Move{
                 parse(instruction.next().?),
                 parse(instruction.next().?),
                 parse(instruction.next().?),
@@ -63,14 +67,22 @@ const StacksOfCrates = struct {
         return std.fmt.parseUnsigned(u9, buf, 10) catch unreachable;
     }
 
-    fn print(crates: anytype) void {
-        for (crates, 0..) |row, index| {
+    fn print(self: *const Self) void {
+        for (self.crates, 0..) |row, index| {
             std.debug.print("{}", .{index});
             for (row.constSlice()) |value| {
                 std.debug.print("[{c}]", .{value});
             }
             std.debug.print("\n", .{});
         }
+    }
+
+    ///get top of stacks
+    fn top(self: *const Self) void {
+        for (self.crates) |crate| {
+            if (crate.len > 0) std.debug.print("{c}", .{crate.get(crate.len - 1)});
+        }
+        std.debug.print("\n", .{});
     }
 };
 
@@ -88,7 +100,30 @@ pub fn part1() void {
     }
 
     //get top of stacks
-    for (stacks.crates) |crate| {
-        if (crate.len > 0) std.debug.print("{c}", .{crate.get(crate.len - 1)});
+    stacks.top();
+}
+
+pub fn part2() void {
+    var stacks = StacksOfCrates.init();
+
+    for (stacks.moves) |instructions| {
+        const quantity, const from, const to = instructions;
+
+        var move_crate = StacksOfCrates.Stack.init(0) catch unreachable;
+
+        var move_from_count: usize = 0;
+        //move count crates into the `move_crate`
+        while (move_from_count < quantity) : (move_from_count += 1) {
+            move_crate.appendAssumeCapacity(stacks.crates[from - 1].pop());
+        }
+
+        //move the  count crates into the `move_crate`
+        var move_to_count: usize = 0;
+        while (move_to_count < quantity) : (move_to_count += 1) {
+            stacks.crates[to - 1].appendAssumeCapacity(move_crate.pop());
+        }
     }
+
+    //get top stack
+    stacks.top();
 }
