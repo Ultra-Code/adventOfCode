@@ -11,4 +11,8 @@ categories = ["problem solving", "algorithms", "data structures"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "aoc"
+test = true
+
 [dependencies]

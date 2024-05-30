@@ -1,7 +1,7 @@
 type Operations<'a> = std::iter::Skip<std::str::Lines<'a>>;
 
 fn parse_input(content: &str) -> ([[Option<char>; 9]; 8], Operations<'_>) {
-    let mut stacks_of_crates: [[Option<char>; 9]; 8] = [[None; 9]; 8];
+    let mut stacks_of_crates = [[None; 9]; 8];
 
     let crates_and_operations = content.lines();
     let mut crates = crates_and_operations.clone().take(8).collect::<Vec<&str>>();
