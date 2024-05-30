@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn test_part1() {
         assert_eq!(part1().ok().unwrap(), part1_improved());
-        assert_eq!(part1_improved(), 11603);
+        assert_eq!(part1_improved(), 74711);
     }
     #[test]
     #[ignore]

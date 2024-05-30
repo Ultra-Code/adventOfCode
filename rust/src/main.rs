@@ -3,7 +3,7 @@
 #![feature(num_midpoint)]
 #![feature(iter_next_chunk)]
 #![feature(iter_array_chunks)]
-// mod day01;
+mod day01;
 // mod day02;
 // mod day03;
 // mod day04;
