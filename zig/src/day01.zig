@@ -7,7 +7,7 @@ const EMPTY = utils.EMPTY;
 
 fn elveList() std.ArrayList(Calories) {
     const cwd = std.fs.cwd();
-    const content = cwd.readFileAlloc(gpa, "../data/day01.txt", std.math.maxInt(usize)) catch unreachable;
+    const content = cwd.readFileAlloc(gpa, "src/data/day01.txt", std.math.maxInt(usize)) catch unreachable;
 
     var lines = std.mem.splitScalar(u8, content, '\n');
 
