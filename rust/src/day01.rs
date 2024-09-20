@@ -86,8 +86,8 @@ mod tests {
         assert_eq!(part1().ok().unwrap(), part1_improved());
         assert_eq!(part1_improved(), 74_711);
     }
+
     #[test]
-    #[ignore]
     fn test_part2() {
         assert_eq!(part2().ok().unwrap(), part2_improved());
         assert_eq!(part2_improved(), 209_481);
