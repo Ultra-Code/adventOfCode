@@ -1,5 +1,7 @@
 const std = @import("std");
-const utils = @import("utils.zig");
+const consts = @import("consts.zig");
+const log = std.log;
+const testing = std.testing;
 
 const Game = enum(u8) {
     Rock = 1,
@@ -24,22 +26,24 @@ const Player = enum {
 
 const stringToEnum = std.meta.stringToEnum;
 
-pub fn part1() void {
+pub fn part1() usize {
     const data = @embedFile("data/day02.txt");
     const total_score_1 = rockPaperSissorsInitialStrategy(data);
-    std.debug.print(
-        "The total score would be {} if everything goes exactly according to your strategy guide.\n",
+    std.log.info(
+        "The total score would be {} if everything goes exactly according to your strategy guide.",
         .{total_score_1},
     );
+    return total_score_1;
 }
 
-pub fn part2() void {
+pub fn part2() usize {
     const data = @embedFile("data/day02.txt");
     const total_score_2 = rockPaperSissorsFinalStrategy(data);
-    std.debug.print(
-        "Now that I'm correctly decrypting the ultra top secret strategy guide, I get a total score of {}\n",
+    std.log.info(
+        "Now that I'm correctly decrypting the ultra top secret strategy guide, I get a total score of {}",
         .{total_score_2},
     );
+    return total_score_2;
 }
 
 fn rockPaperSissorsInitialStrategy(data: []const u8) usize {
@@ -47,8 +51,8 @@ fn rockPaperSissorsInitialStrategy(data: []const u8) usize {
 
     var total_score_1: usize = 0;
     while (lines.next()) |line| {
-        var players = if (line.len != utils.EMPTY) std.mem.splitScalar(u8, line, ' ') else {
-            if (line.len == utils.EMPTY) break;
+        var players = if (line.len != consts.EMPTY) std.mem.splitScalar(u8, line, ' ') else {
+            if (line.len == consts.EMPTY) break;
             unreachable;
         };
         const opponent = stringToEnum(Player, players.first()).?;
@@ -96,8 +100,8 @@ fn rockPaperSissorsFinalStrategy(data: []const u8) usize {
 
     var total_score_2: usize = 0;
     while (lines.next()) |line| {
-        var players = if (line.len != utils.EMPTY) std.mem.splitScalar(u8, line, ' ') else {
-            if (line.len == utils.EMPTY) break;
+        var players = if (line.len != consts.EMPTY) std.mem.splitScalar(u8, line, ' ') else {
+            if (line.len == consts.EMPTY) break;
             unreachable;
         };
         const opponent = stringToEnum(Player, players.first()).?;
@@ -143,6 +147,8 @@ fn playRockPaperSissors2(opponent: Player, me: Player) struct { Game, GameOutcom
 }
 
 test part1 {
+    try testing.expectEqual(@as(usize, 11603), part1());
+
     const data =
         \\A Y
         \\B X
@@ -151,12 +157,15 @@ test part1 {
     ;
     try std.testing.expectEqual(@as(usize, 15), rockPaperSissorsInitialStrategy(data));
 }
+
 test part2 {
+    try testing.expectEqual(@as(usize, 12725), part2());
+
     const data =
         \\A Y
         \\B X
         \\C Z
         \\
     ;
-    try std.testing.expectEqual(@as(usize, 15), rockPaperSissorsFinalStrategy(data));
+    try std.testing.expectEqual(@as(usize, 12), rockPaperSissorsFinalStrategy(data));
 }

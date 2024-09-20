@@ -1,21 +1,20 @@
 const std = @import("std");
-const utils = @import("utils.zig");
+const log = std.log;
+const testing = std.testing;
+const gpa = @import("alloc.zig").gpa;
+const consts = @import("consts.zig");
 
-const gpa = utils.gpa;
-const Calories = utils.Calories;
-const EMPTY = utils.EMPTY;
-
-fn elveList() std.ArrayList(Calories) {
+fn elveList() std.ArrayList(consts.Calories) {
     const cwd = std.fs.cwd();
     const content = cwd.readFileAlloc(gpa, "src/data/day01.txt", std.math.maxInt(usize)) catch unreachable;
 
     var lines = std.mem.splitScalar(u8, content, '\n');
 
-    var elves_calories = std.ArrayList(Calories).init(gpa);
+    var elves_calories = std.ArrayList(consts.Calories).init(gpa);
 
     var current_total_calories: usize = 0;
     while (lines.next()) |line| {
-        if (line.len != EMPTY) {
+        if (line.len != consts.EMPTY) {
             const elve_calories = std.fmt.parseInt(usize, line, 10) catch unreachable;
             current_total_calories += elve_calories;
         } else {
@@ -28,13 +27,14 @@ fn elveList() std.ArrayList(Calories) {
     return elves_calories;
 }
 
-pub fn part1() void {
+pub fn part1() usize {
     const elves_calories = elveList();
-    const location_of_elve_with_max_calories = std.mem.indexOfMax(Calories, elves_calories.items);
-    std.debug.print(
-        "The {[position]}th elve has the maximum number of calories which is {[max]}\n",
+    const location_of_elve_with_max_calories = std.mem.indexOfMax(consts.Calories, elves_calories.items);
+    log.info(
+        "The {[position]}th elve has the maximum number of calories which is {[max]}",
         .{ .position = location_of_elve_with_max_calories, .max = elves_calories.items[location_of_elve_with_max_calories] },
     );
+    return elves_calories.items[location_of_elve_with_max_calories];
 }
 
 fn top3elves(list: []const usize) [3]usize {
@@ -53,8 +53,11 @@ fn top3elves(list: []const usize) [3]usize {
     }
     return top3;
 }
+test part1 {
+    try testing.expectEqual(@as(usize, 74711), part1());
+}
 
-pub fn part2() void {
+pub fn part2() usize {
     const elves_calories = elveList().items;
     // std.mem.sortUnstable(usize, elves_calories, {}, std.sort.desc(usize));
     const top_3_elves = top3elves(elves_calories);
@@ -65,8 +68,13 @@ pub fn part2() void {
         }
         break :sum total;
     };
-    std.debug.print(
-        "The total calories of the top 3 elves is {[total]}\n",
+    log.info(
+        "The total calories of the top 3 elves is {[total]}",
         .{ .total = total_calories_of_top_3_elves },
     );
+    return total_calories_of_top_3_elves;
+}
+
+test part2 {
+    try testing.expectEqual(@as(usize, 209481), part2());
 }

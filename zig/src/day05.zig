@@ -1,4 +1,8 @@
 const std = @import("std");
+const testing = std.testing;
+const mem = std.mem;
+const log = std.log;
+const io = std.io;
 
 const StacksOfCrates = struct {
     const Self = @This();
@@ -24,7 +28,7 @@ const StacksOfCrates = struct {
         const input = @embedFile("data/day05.txt");
         var crates: [column_no]Stack = [_]Stack{Stack.init(0) catch unreachable} ** column_no;
 
-        var lines = std.mem.splitScalar(u8, input, '\n');
+        var lines = mem.splitScalar(u8, input, '\n');
         while (lines.next()) |line| {
             //end of the stack
             if (line[0] != '[') {
@@ -47,7 +51,7 @@ const StacksOfCrates = struct {
         while (lines.next()) |instructions| : (instruction_index += 1) {
             if (instructions.len == 0) break;
 
-            var instruction = std.mem.tokenizeAny(u8, instructions, "move from to");
+            var instruction = mem.tokenizeAny(u8, instructions, "move from to");
             moves[instruction_index] = Move{
                 parse(instruction.next().?),
                 parse(instruction.next().?),
@@ -57,7 +61,7 @@ const StacksOfCrates = struct {
 
         // reverse the stack so that its end match the input sample end
         for (&crates) |*stack| {
-            std.mem.reverse(u8, stack.slice());
+            mem.reverse(u8, stack.slice());
         }
 
         return .{ .crates = crates, .moves = moves };
@@ -68,25 +72,41 @@ const StacksOfCrates = struct {
     }
 
     fn print(self: *const Self) void {
+        const stdout_file = io.getStdOut().writer();
+        var bw = io.bufferedWriter(stdout_file);
+        const stdout = bw.writer();
+
         for (self.crates, 0..) |row, index| {
-            std.debug.print("{}", .{index});
+            stdout.print("{}", .{index});
             for (row.constSlice()) |value| {
-                std.debug.print("[{c}]", .{value});
+                stdout.print("[{c}]", .{value}) catch unreachable;
             }
-            std.debug.print("\n", .{});
+            stdout.print("\n", .{}) catch unreachable;
         }
+        bw.flush() catch unreachable;
     }
 
     ///get top of stacks
-    fn top(self: *const Self) void {
+    fn top(self: *const Self) [9]u8 {
+        var buf: [9]u8 = undefined;
+        var fbs = io.fixedBufferStream(&buf);
+        var bw = io.bufferedWriter(fbs.writer());
+        defer bw.flush() catch unreachable;
+
+        const output = bw.writer();
+
         for (self.crates) |crate| {
-            if (crate.len > 0) std.debug.print("{c}", .{crate.get(crate.len - 1)});
+            if (crate.len > 0) output.print(
+                "{c}",
+                .{crate.get(crate.len - 1)},
+            ) catch unreachable;
         }
-        std.debug.print("\n", .{});
+
+        return mem.bytesToValue([9]u8, bw.buf[0..bw.end]);
     }
 };
 
-pub fn part1() void {
+pub fn part1() [9]u8 {
     var stacks = StacksOfCrates.init();
 
     for (stacks.moves) |instruction| {
@@ -98,12 +118,20 @@ pub fn part1() void {
             stacks.crates[to - 1].appendAssumeCapacity(move_value);
         }
     }
-
+    const top = stacks.top();
     //get top of stacks
-    stacks.top();
+    log.info("{s}", .{top});
+    return top;
 }
 
-pub fn part2() void {
+test part1 {
+    try testing.expectEqual(
+        [9]u8{ 'P', 'T', 'W', 'L', 'T', 'D', 'S', 'J', 'V' },
+        part1(),
+    );
+}
+
+pub fn part2() [9]u8 {
     var stacks = StacksOfCrates.init();
 
     for (stacks.moves) |instructions| {
@@ -125,5 +153,14 @@ pub fn part2() void {
     }
 
     //get top stack
-    stacks.top();
+    const top = stacks.top();
+    log.info("{s}", .{top});
+    return top;
+}
+
+test part2 {
+    try testing.expectEqual(
+        [9]u8{ 'W', 'Z', 'M', 'F', 'V', 'G', 'G', 'Z', 'P' },
+        part2(),
+    );
 }

@@ -1,7 +1,8 @@
 const std = @import("std");
-const utils = @import("utils.zig");
+const log = std.log;
+const testing = std.testing;
 
-pub fn part1() void {
+pub fn part1() usize {
     const content = @embedFile("data/day03.txt");
     const content_lines_len = 300;
 
@@ -19,7 +20,11 @@ pub fn part1() void {
     }
 
     const priority_sum = itemsToPriority(item_list.constSlice());
-    std.debug.print("The sum of the priorities of common items is {[priority_sum]}\n", .{ .priority_sum = priority_sum });
+    log.info(
+        "The sum of the priorities of common items is {[priority_sum]}",
+        .{ .priority_sum = priority_sum },
+    );
+    return priority_sum;
 }
 
 fn itemsToPriority(item_list: []const u8) usize {
@@ -41,7 +46,11 @@ fn itemsToPriority(item_list: []const u8) usize {
     return priority_sum;
 }
 
-pub fn part2() void {
+test part1 {
+    try testing.expectEqual(@as(usize, 8139), part1());
+}
+
+pub fn part2() usize {
     const content = @embedFile("data/day03.txt");
     const content_lines_len = 100;
 
@@ -67,8 +76,14 @@ pub fn part2() void {
                 continue;
         }
     }
-    std.debug.print("line_count is {}\n", .{line_count});
 
     const priority_sum = itemsToPriority(badge_list.constSlice());
-    std.debug.print("The sum of the priorities of badges in the various 3 elf group is {[priority_sum]}\n", .{ .priority_sum = priority_sum });
+    log.info(
+        "The sum of the priorities of badges in the various 3 elf group is {[priority_sum]}",
+        .{ .priority_sum = priority_sum },
+    );
+    return priority_sum;
+}
+test part2 {
+    try testing.expectEqual(@as(usize, 2668), part2());
 }

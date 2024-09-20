@@ -12,5 +12,3 @@ pub const gpa = switch (builtin.mode) {
         break :blk arena.allocator();
     },
 };
-pub const Calories = usize;
-pub const EMPTY = 0;
