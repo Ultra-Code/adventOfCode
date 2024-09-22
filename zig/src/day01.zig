@@ -1,7 +1,7 @@
 const std = @import("std");
 const log = std.log;
 const testing = std.testing;
-const gpa = @import("alloc.zig").gpa;
+const gpa = @import("alloc.zig").arena;
 const consts = @import("consts.zig");
 
 fn elveList() std.ArrayList(consts.Calories) {
