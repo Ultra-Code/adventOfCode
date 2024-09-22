@@ -36,7 +36,7 @@ pub fn part1() -> Result<usize, Box<dyn std::error::Error>> {
 }
 
 pub fn part1_improved() -> usize {
-    let max_elves_calories = include_str!("./data/day01.txt")
+    let max_elves_calories = include_str!("data/day01.txt")
         .split("\n\n")
         .map(|lines| {
             lines
@@ -46,7 +46,9 @@ pub fn part1_improved() -> usize {
         })
         .max()
         .unwrap();
-    println!("The maximum number of calories with an elve is {max_elves_calories}");
+    println!(
+        "The maximum number of calories with an elve is {max_elves_calories}"
+    );
     max_elves_calories
 }
 
@@ -54,7 +56,8 @@ pub fn part2() -> Result<usize, Box<dyn std::error::Error>> {
     let mut list_of_elves_calories = elve_list()?;
 
     list_of_elves_calories.sort_unstable_by(|a, b| b.cmp(a));
-    let total_calories_of_top_3_elves = list_of_elves_calories.iter().take(3).sum::<usize>();
+    let total_calories_of_top_3_elves =
+        list_of_elves_calories.iter().take(3).sum::<usize>();
 
     println!("The top 3 elves have total calories of {total_calories_of_top_3_elves}");
     Ok(total_calories_of_top_3_elves)
@@ -71,7 +74,8 @@ pub fn part2_improved() -> usize {
         })
         .collect::<Vec<usize>>();
     list_of_elves_calories.sort_unstable_by(|a, b| b.cmp(a));
-    let total_calories_of_top_3_elves = list_of_elves_calories.iter().take(3).sum();
+    let total_calories_of_top_3_elves =
+        list_of_elves_calories.iter().take(3).sum();
 
     println!("The top 3 elves have total calories of {total_calories_of_top_3_elves}");
     total_calories_of_top_3_elves

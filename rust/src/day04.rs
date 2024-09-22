@@ -3,9 +3,11 @@ fn parse_input() -> Vec<[usize; 4]> {
     let pair_of_section_ids = content.lines();
 
     let range = pair_of_section_ids.map(|elves_pair| {
-        let (first_section_range, second_section_range) = elves_pair.split_once(',').unwrap();
+        let (first_section_range, second_section_range) =
+            elves_pair.split_once(',').unwrap();
 
-        let (first_section_begin, first_section_end) = first_section_range.split_once('-').unwrap();
+        let (first_section_begin, first_section_end) =
+            first_section_range.split_once('-').unwrap();
         let (first_section_begin, first_section_end) = (
             first_section_begin.parse::<usize>().unwrap(),
             first_section_end.parse::<usize>().unwrap(),

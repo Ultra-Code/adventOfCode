@@ -13,7 +13,7 @@ enum GameOutcome {
     Win = 6,
 }
 
-pub fn part1() -> Result<(), Box<dyn std::error::Error>> {
+pub fn part1() -> Result<usize, Box<dyn std::error::Error>> {
     let content = read_to_string("src/data/day02.txt")?;
     let initial_game_map = HashMap::<&str, Game>::from([
         ("A", Game::Rock),
@@ -57,12 +57,14 @@ pub fn part1() -> Result<(), Box<dyn std::error::Error>> {
         total_score += game_value as usize + outcome_value as usize;
     }
 
-    println!("According to the initial strategy the total score is {total_score}");
+    println!(
+        "According to the initial strategy the total score is {total_score}"
+    );
 
-    Ok(())
+    Ok(total_score)
 }
 
-pub fn part2() -> Result<(), Box<dyn std::error::Error>> {
+pub fn part2() -> Result<usize, Box<dyn std::error::Error>> {
     let content = read_to_string("src/data/day02.txt")?;
 
     #[rustfmt::skip]
@@ -113,5 +115,20 @@ pub fn part2() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("According to the new strategy guide the total score would be {total_score}");
 
-    Ok(())
+    Ok(total_score)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part1() {
+        assert_eq!(part1().unwrap(), 11603);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2().unwrap(), 12725);
+    }
 }
