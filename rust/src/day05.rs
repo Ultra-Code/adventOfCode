@@ -1,252 +1,204 @@
-type Operations<'a> = std::iter::Skip<std::str::Lines<'a>>;
+mod imperative;
 
-fn parse_input(content: &str) -> ([[Option<char>; 9]; 8], Operations<'_>) {
-    let mut stacks_of_crates = [[None; 9]; 8];
+use std::collections::VecDeque;
 
-    let crates_and_operations = content.lines();
-    let mut crates = crates_and_operations.clone().take(8).collect::<Vec<&str>>();
-    //reverse the order of the elements so that when they been placed in the stack the original
-    //order is obtained
-    crates.reverse();
+#[derive(Debug, PartialEq, Eq)]
+struct Move(usize, usize, usize);
+enum CrateMover {
+    M9000,
+    M9001,
+}
+struct Stacks<'a, const SHIP_COUNT: usize, const STACK_LEN: usize, const MOVES_LEN: usize> {
+    stack_of_crates: [VecDeque<char>; SHIP_COUNT],
+    moves: [Move; MOVES_LEN],
+    instructions: &'a str,
+}
 
-    let initial_label_offset = 1; //regular count is 2 but since we are 0 indexing it is 1
-    let next_label_offset = 4;
-    for (row_index, &marked_crates) in crates.iter().enumerate() {
-        let mut label_offset = initial_label_offset;
+impl<'a, const SHIP_COUNT: usize, const STACK_LEN: usize, const MOVES_LEN: usize>
+    Stacks<'a, SHIP_COUNT, STACK_LEN, MOVES_LEN>
+{
+    fn init(instructions: &'a str) -> Self {
+        let stack_of_crates = Self::crate_stacks(instructions);
+        let moves = Self::moves(instructions);
+        Self {
+            stack_of_crates,
+            moves,
+            instructions,
+        }
+    }
 
-        for column_index in 0..9 {
-            if column_index == 0 {
-                let current_crate = marked_crates.chars().nth(initial_label_offset);
-                stacks_of_crates[row_index][0] = match current_crate {
-                    Some(' ') => None,
-                    _ => current_crate,
+    pub fn top_crates(&mut self, crate_mover: CrateMover) -> String {
+        let crate_stacks = &mut self.stack_of_crates;
+        let moves = &self.moves;
+
+        match crate_mover {
+            CrateMover::M9000 => {
+                for &Move(amount, from, to) in moves {
+                    (0..amount).for_each(|_| {
+                        let value = crate_stacks[from - 1].pop_front().unwrap();
+                        crate_stacks[to - 1].push_front(value);
+                    });
+                }
+            }
+            CrateMover::M9001 => {
+                for &Move(amount, from, to) in moves {
+                    let from_crate = &mut crate_stacks[from - 1];
+                    let mut crate_to_move = from_crate.drain(..amount).collect::<VecDeque<_>>();
+                    crate_to_move.extend(crate_stacks[to - 1].iter());
+                    crate_stacks[to - 1] = crate_to_move;
+                }
+            }
+        }
+
+        let mut top = || {
+            let mut top_of_stack_crates = String::new();
+            crate_stacks
+                .iter_mut()
+                .for_each(|stack| top_of_stack_crates.push(stack.pop_front().unwrap()));
+
+            top_of_stack_crates
+        };
+
+        top()
+    }
+
+    fn moves(instructions: &str) -> [Move; MOVES_LEN] {
+        let move_instructions_offset = 2;
+
+        let moves: [Move; MOVES_LEN] = instructions
+            .lines()
+            .skip(STACK_LEN + move_instructions_offset)
+            .map(|line| {
+                let &[amount, from, to] = line
+                    .split_whitespace()
+                    .filter_map(|word| word.parse::<usize>().ok())
+                    .collect::<Vec<usize>>()
+                    .as_slice()
+                else {
+                    unreachable!()
                 };
-                label_offset += next_label_offset;
-                continue;
-            }
-            let current_crate = marked_crates.chars().nth(label_offset);
+                Move(amount, from, to)
+            })
+            .collect::<Vec<Move>>()
+            .try_into()
+            .unwrap_or_else(|moves| panic!("Unable to convert {moves:#?} to [Moves;{MOVES_LEN}]"));
 
-            stacks_of_crates[row_index][column_index] = match current_crate {
-                Some(' ') => None,
-                _ => current_crate,
-            };
-            label_offset += next_label_offset;
-        }
+        moves
     }
 
-    let stacks_of_crates_len = 10;
+    fn crate_stacks(instructions: &str) -> [std::collections::VecDeque<char>; SHIP_COUNT] {
+        // the array lenght is the same as the ship count
+        let mut crate_stack = std::array::from_fn(|_| VecDeque::with_capacity(STACK_LEN));
 
-    (
-        stacks_of_crates,
-        crates_and_operations.skip(stacks_of_crates_len),
-    )
+        instructions
+            .lines()
+            .take(STACK_LEN)
+            .flat_map(|line| {
+                let distance_between_crates = 4;
+                line.chars()
+                    .skip(1)
+                    .step_by(distance_between_crates)
+                    .take(SHIP_COUNT)
+                    .enumerate()
+                    .filter(|&(_column, char)| char.ne(&' '))
+            })
+            .for_each(|(column, char)| {
+                crate_stack[column].push_back(char);
+            });
+
+        crate_stack
+    }
+
+    fn cargo_stack_len(&self) -> usize {
+        let max_cargo_stack_len = self
+            .instructions
+            .lines()
+            .enumerate()
+            .find_map(|(index, line)| {
+                let is_empty = line.is_empty();
+
+                if is_empty {
+                    Some(index - 1)
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+
+        max_cargo_stack_len
+    }
+
+    fn ship_counts(&self) -> usize {
+        let ships_count = self
+            .instructions
+            .lines()
+            .nth(STACK_LEN)
+            .unwrap()
+            .chars()
+            .rev()
+            .find(|char| char.is_numeric())
+            .unwrap()
+            .to_digit(10)
+            .unwrap() as usize;
+
+        ships_count
+    }
 }
 
-pub fn part1() {
-    let content = std::fs::read_to_string("src/data/day05.txt").unwrap();
-    let (stacks_of_crates, operations) = parse_input(&content);
-    let mut stack_1 = vec![];
-    let mut stack_2 = vec![];
-    let mut stack_3 = vec![];
-    let mut stack_4 = vec![];
-    let mut stack_5 = vec![];
-    let mut stack_6 = vec![];
-    let mut stack_7 = vec![];
-    let mut stack_8 = vec![];
-    let mut stack_9 = vec![];
-
-    for marked_crates in stacks_of_crates {
-        for (column_index, &current_crate) in marked_crates.iter().enumerate() {
-            if let Some(crate_value) = current_crate {
-                match column_index {
-                    0 => stack_1.push(crate_value),
-                    1 => stack_2.push(crate_value),
-                    2 => stack_3.push(crate_value),
-                    3 => stack_4.push(crate_value),
-                    4 => stack_5.push(crate_value),
-                    5 => stack_6.push(crate_value),
-                    6 => stack_7.push(crate_value),
-                    7 => stack_8.push(crate_value),
-                    8 => stack_9.push(crate_value),
-                    _ => unreachable!(),
-                }
-            }
-        }
-    }
-
-    let stacks = [
-        &mut stack_1,
-        &mut stack_2,
-        &mut stack_3,
-        &mut stack_4,
-        &mut stack_5,
-        &mut stack_6,
-        &mut stack_7,
-        &mut stack_8,
-        &mut stack_9,
-    ];
-
-    for operation in operations {
-        let mut micro_operations = operation.split(' ');
-        let quantity_to_move = micro_operations.nth(1).unwrap().parse::<usize>().unwrap();
-        let from_stack = micro_operations.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-        let to_stack = micro_operations.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-
-        for _ in 0..quantity_to_move {
-            let move_value = stacks[from_stack].pop().unwrap();
-            stacks[to_stack].push(move_value);
-        }
-    }
-
-    let mut top_stacks = String::new();
-    for stack in stacks {
-        top_stacks.push(*stack.last().unwrap());
-    }
-    println!("(take:1) Top stacks are : {top_stacks:?}");
+fn part1() -> String {
+    let input = include_str!("data/day05.txt");
+    let mut stack = Stacks::<9, 8, 501>::init(input);
+    stack.top_crates(CrateMover::M9000)
 }
 
-pub fn part1_take2() {
-    let content = std::fs::read_to_string("src/data/day05.txt").unwrap();
-    let crates_and_operations = content.lines();
-    let mut crates = crates_and_operations.clone().take(8).collect::<Vec<&str>>();
-    //reverse the order of the elements so that when they been placed in the stack the original
-    //order is obtained
-    crates.reverse();
-
-    let mut stack_1 = vec![];
-    let mut stack_2 = vec![];
-    let mut stack_3 = vec![];
-    let mut stack_4 = vec![];
-    let mut stack_5 = vec![];
-    let mut stack_6 = vec![];
-    let mut stack_7 = vec![];
-    let mut stack_8 = vec![];
-    let mut stack_9 = vec![];
-    //a map of indexes to stacks
-    let mut stacks_of_crates = [
-        &mut stack_1,
-        &mut stack_2,
-        &mut stack_3,
-        &mut stack_4,
-        &mut stack_5,
-        &mut stack_6,
-        &mut stack_7,
-        &mut stack_8,
-        &mut stack_9,
-    ];
-
-    //offset of 1st label in the stack of crates diagram
-    let initial_label_offset = 1; //regular count is 2 but since we are 0 indexing it is 1
-    let next_label_offset = 4; // offset of next label in the stack of crates diagram
-    for marked_crates in crates {
-        let mut label_offset = initial_label_offset;
-
-        for stack in &mut stacks_of_crates {
-            let current_crate = marked_crates.chars().nth(label_offset);
-            let current_crate = match current_crate {
-                Some(' ') => {
-                    label_offset += next_label_offset;
-                    continue;
-                }
-                _ => current_crate,
-            };
-
-            stack.push(current_crate);
-            label_offset += next_label_offset;
-        }
-    }
-
-    for operation in content.lines().skip(10) {
-        let mut micro_operations = operation.split(' ');
-        let quantity_to_move = micro_operations.nth(1).unwrap().parse::<usize>().unwrap();
-        let from_stack = micro_operations.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-        let to_stack = micro_operations.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-
-        for _ in 0..quantity_to_move {
-            let move_value = stacks_of_crates[from_stack].pop().unwrap();
-            stacks_of_crates[to_stack].push(move_value);
-        }
-    }
-
-    let mut top_stacks = String::new();
-    for stack in &stacks_of_crates {
-        top_stacks.push(stack.last().unwrap().unwrap());
-    }
-    println!("(part 1 take: 2) Top stacks are : {top_stacks:?}");
+fn part2() -> String {
+    let input = include_str!("data/day05.txt");
+    let mut stack = Stacks::<9, 8, 501>::init(input);
+    stack.top_crates(CrateMover::M9001)
 }
 
-pub fn part2() {
-    let content = std::fs::read_to_string("src/data/day05.txt").unwrap();
-    let crates_and_operations = content.lines();
-    let mut crates = crates_and_operations.clone().take(8).collect::<Vec<&str>>();
-    crates.reverse();
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    //a map of indexes to stacks
-    // let mut stacks_of_crates = Vec::<Vec<char>>::new();
-    let mut stack_1 = vec![];
-    let mut stack_2 = vec![];
-    let mut stack_3 = vec![];
-    let mut stack_4 = vec![];
-    let mut stack_5 = vec![];
-    let mut stack_6 = vec![];
-    let mut stack_7 = vec![];
-    let mut stack_8 = vec![];
-    let mut stack_9 = vec![];
-    //a map of indexes to stacks
-    let mut stacks_of_crates = [
-        &mut stack_1,
-        &mut stack_2,
-        &mut stack_3,
-        &mut stack_4,
-        &mut stack_5,
-        &mut stack_6,
-        &mut stack_7,
-        &mut stack_8,
-        &mut stack_9,
-    ];
+    #[test]
+    fn test_starter() {
+        let data: &str = "    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
 
-    //offset of 1st label in the stack of crates diagram
-    let initial_label_offset = 1; //regular count is 2 but since we are 0 indexing it is 1
-    let next_label_offset = 4; // offset of next label in the stack of crates diagram
-    for marked_crates in crates {
-        let mut label_offset = initial_label_offset;
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2";
 
-        for stack in &mut stacks_of_crates {
-            let current_crate = marked_crates.chars().nth(label_offset);
-            let current_crate = match current_crate {
-                Some(' ') => {
-                    label_offset += next_label_offset;
-                    continue;
-                }
-                _ => current_crate,
-            };
+        let mut stack = Stacks::<3, 3, 4>::init(data);
+        assert_eq!(stack.cargo_stack_len(), 3);
+        assert_eq!(stack.ship_counts(), 3);
+        assert_eq!(
+            Stacks::<3, 3, 4>::crate_stacks(data),
+            [
+                VecDeque::from(['N', 'Z']),
+                VecDeque::from(['D', 'C', 'M']),
+                VecDeque::from(['P']),
+            ]
+        );
+        assert_eq!(
+            Stacks::<3, 3, 4>::moves(data),
+            [Move(1, 2, 1), Move(3, 1, 3), Move(2, 2, 1), Move(1, 1, 2),]
+        );
 
-            stack.push(current_crate.unwrap());
-            label_offset += next_label_offset;
-        }
+        assert_eq!(stack.top_crates(CrateMover::M9000), "CMZ");
     }
 
-    for operation in content.lines().skip(10) {
-        let mut micro_operations = operation.split(' ');
-        let quantity_to_move: usize = micro_operations.nth(1).unwrap().parse::<usize>().unwrap();
-        let from_stack = micro_operations.nth(1).unwrap().parse::<usize>().unwrap() - 1;
-        let to_stack = micro_operations.nth(1).unwrap().parse::<usize>().unwrap() - 1;
+    #[test]
+    fn test_part1() {
+        assert_eq!(part1(), "PTWLTDSJV");
+    }
 
-        let mut move_values = vec![];
-        for _ in 0..quantity_to_move {
-            let value = stacks_of_crates[from_stack].pop().unwrap();
-            move_values.push(value);
-        }
-        move_values.reverse(); //to maintain original order
-
-        for value in move_values {
-            stacks_of_crates[to_stack].push(value);
-        }
-
-        let mut top_stacks = String::new();
-        for stack in &stacks_of_crates {
-            top_stacks.push(*stack.last().unwrap());
-        }
-        println!("(take:2) Top stacks are : {top_stacks:?}");
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2(), "WZMFVGGZP");
     }
 }
