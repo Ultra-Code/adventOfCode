@@ -72,7 +72,7 @@ test startpacket {
     }
 }
 
-fn part1() usize {
+pub fn part1() usize {
     const input = @embedFile("data/day06.txt");
     const marker_size = 4;
     return startpacket(input, marker_size);
@@ -82,7 +82,7 @@ test part1 {
     try testing.expectEqual(part1(), 1987);
 }
 
-fn part2() usize {
+pub fn part2() usize {
     const input = @embedFile("data/day06.txt");
     const marker_size = 14;
     return startpacket(input, marker_size);
