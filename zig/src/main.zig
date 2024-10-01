@@ -20,6 +20,10 @@ pub fn main() !void {
     _ = day04.part2();
     _ = day05.part1();
     _ = day05.part2();
+    _ = day06.part1();
+    _ = day06.part2();
+    // _ = day07.part1();
+    // _ = day07.part2();
 }
 
 test {
