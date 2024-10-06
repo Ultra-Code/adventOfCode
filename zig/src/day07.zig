@@ -244,17 +244,18 @@ const Fs = struct {
         // the `total_used_space`
         const size_of_extra_space_needed = needed_unused_space - current_unused_space;
 
+        var smallest_big_dir: struct { []const u8, usize } = .{ "", total_used_space };
         var stack: std.ArrayList([]Directory) = .init(fs.arena);
         stack.append(fs.root.sub_dirs.items) catch unreachable;
         while (stack.popOrNull()) |dirs| {
             for (dirs) |dir| {
-                if (dir.size >= size_of_extra_space_needed and dir.size < total_used_space) return .{ dir.name, dir.size };
+                if (dir.size >= size_of_extra_space_needed) smallest_big_dir = .{ dir.name, @min(dir.size, smallest_big_dir[1]) };
                 if (dir.sub_dirs.items.len != 0) {
                     stack.append(dir.sub_dirs.items) catch unreachable;
                 }
             }
         }
-        unreachable;
+        return smallest_big_dir;
     }
 
     test dirToDelToEnableUpdate {
@@ -328,8 +329,9 @@ fn part2() struct { []const u8, usize } {
 }
 
 test part2 {
-    try testing.expectEqualDeep(.{ "plws", 1_554_678 }, part2());
+    try testing.expectEqualDeep(.{ "jfzgrbm", 272_298 }, part2());
 }
+
 test {
     _ = Fs;
 }
